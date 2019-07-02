@@ -1,0 +1,5 @@
+MODULES_MANAGER_V2
+src.create_container|C:\Users\Win10 Pro x64\Desktop\workspace-cloud\MyDeploymentScript\src\create_container.py
+src.my_deployment_script|C:\Users\Win10 Pro x64\Desktop\workspace-cloud\MyDeploymentScript\src\my_deployment_script.py
+src.scaleOut|C:\Users\Win10 Pro x64\Desktop\workspace-cloud\MyDeploymentScript\src\scaleOut.py
+src.upload_object|C:\Users\Win10 Pro x64\Desktop\workspace-cloud\MyDeploymentScript\src\upload_object.py

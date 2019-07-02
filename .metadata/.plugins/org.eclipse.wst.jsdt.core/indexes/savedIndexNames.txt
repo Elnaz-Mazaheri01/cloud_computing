@@ -1,0 +1,9 @@
+INDEX VERSION 1.4+C:\Users\Win10 Pro x64\Desktop\workspace-cloud\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+873455826.index
+1055951078.index
+1202186712.index
+391988542.index
+985413812.index
+1418257186.index
+3505399412.index
+589104963.index

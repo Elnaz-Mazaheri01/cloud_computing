@@ -87,49 +87,6 @@ def main():
     
     return
 
-    print(swift.list_containers())
-
-    ###########################################################################
-    #
-    # upload a goat
-    #
-    ###########################################################################
-
-    object_name = 'an amazing goat'
-    file_path = 'C:\\Users\\Sebastian\\goat.jpg'
-    objects = container.list_objects()
-    object_data = False
-    for obj in objects:
-        if obj.name == object_name:
-            object_data = obj
-
-    if not object_data:
-        # print(os.getcwd())
-        container = swift.get_container(container_name=container_name)
-        object_data = container.upload_object(file_path=file_path, object_name=object_name)
-
-    objects = container.list_objects()
-    print(objects)
-
-    ###########################################################################
-    #
-    # check goat integrity
-    #
-    ###########################################################################
-
-    import hashlib
-    print(hashlib.md5(open(file_path, 'rb').read()).hexdigest())
-
-    ###########################################################################
-    #
-    # delete goat
-    #
-    ###########################################################################
-
-    swift.delete_object(object_data)
-
-    objects = container.list_objects()
-    print(objects)
 
 
 if __name__ == '__main__':

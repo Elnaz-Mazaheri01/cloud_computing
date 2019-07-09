@@ -172,8 +172,8 @@ def main():
             WantedBy=multi-user.target' > /etc/systemd/system/tomcat.service && \
     sudo systemctl daemon-reload && \
     sudo systemctl start tomcat && \
-    git clone https://github.com/Elnaz-Mazaheri01/cloud /tmp/hello && \
-    sudo cp /tmp/hello/hello.war /opt/tomcat/latest/webapps/
+    git clone https://github.com/Elnaz-Mazaheri01/cloud_computing /tmp/cloud && \
+    sudo cp /tmp/cloud/cloud.war /opt/tomcat/latest/webapps/
     '''
 
     print('Checking for existing instance...')
@@ -239,7 +239,7 @@ def main():
     elif private_ip:
         actual_ip_address = private_ip
 
-    print('The Fractals app will be deployed to http://{}'.format(actual_ip_address))
+    print('The creating album app will be deployed to http://{}'.format(actual_ip_address))
 
 
 if __name__ == '__main__':

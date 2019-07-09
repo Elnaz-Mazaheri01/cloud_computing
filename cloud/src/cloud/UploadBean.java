@@ -92,8 +92,8 @@ public class UploadBean {
 
 	       
 			String objectName = this.file.getSubmittedFileName();
-//			String filePath = "/tmp/" + this.file.getSubmittedFileName();
-			String filePath = "D:\\" + this.file.getSubmittedFileName();
+			String filePath = "/tmp/" + this.file.getSubmittedFileName();
+//			String filePath = "D:\\" + this.file.getSubmittedFileName();
 			this.file.write(filePath);
 			String command = "python /tmp/cloud/MyDeploymentScript/src/upload_object.py";
 //			String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\upload_object.py";

@@ -68,7 +68,7 @@ public class UploadBean {
 	public String goToUploadPage() {
 //		createInstance();
 		System.out.println("in goToUploadPage");
-		String command = "python /tmp/cloud/MyDeploymentScript/src/create_container.py";
+		String command = "python /tmp/cloud_computing/MyDeploymentScript/src/create_container.py";
 //		String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\create_container.py";
 		try {
 			System.out.println("in goToUploadPage try-cacth");
@@ -99,7 +99,7 @@ public class UploadBean {
 			String filePath = "/tmp/" + this.file.getSubmittedFileName();
 //			String filePath = "D:\\" + this.file.getSubmittedFileName();
 			this.file.write(filePath);
-			String command = "python /tmp/cloud/MyDeploymentScript/src/upload_object.py";
+			String command = "python /tmp/cloud_computing/MyDeploymentScript/src/upload_object.py";
 //			String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\upload_object.py";
 //			String command = "cmd /c python D:\\test.py";
 			try {

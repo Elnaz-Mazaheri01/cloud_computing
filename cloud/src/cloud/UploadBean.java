@@ -67,17 +67,21 @@ public class UploadBean {
 	//get user name to create container
 	public String goToUploadPage() {
 //		createInstance();
+		System.out.println("in goToUploadPage");
 		String command = "python /tmp/cloud/MyDeploymentScript/src/create_container.py";
 //		String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\create_container.py";
 		try {
+			System.out.println("in goToUploadPage try-cacth");
 			Process p = Runtime.getRuntime().exec(command + " " + this.name);
 			BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 			br.lines().forEach(line -> System.out.println(line));
 			br.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
+			System.out.println("in goToUploadPage :: error");
 			e.printStackTrace();
 		}
+		System.out.println("in goToUploadPage :: returning response");
 		return "myresponse";
 	}
 	
@@ -85,7 +89,7 @@ public class UploadBean {
 	
 	//upload image in container of openstack
 	public String upload() throws IOException {
-		
+		System.out.println("in upload?");
 		this.containerName=String.valueOf(this.name);
 		
 		if (this.file != null) {

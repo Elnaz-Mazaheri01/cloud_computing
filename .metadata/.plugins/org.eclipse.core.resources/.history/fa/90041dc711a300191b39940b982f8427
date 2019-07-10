@@ -1,0 +1,247 @@
+# import getpass
+# import os
+
+from libcloud.compute.providers import get_driver
+from libcloud.compute.types import Provider
+
+# Please use 1-25 for X in username, project etc., as coordinated in the lab sessions
+
+# web service endpoint of the private cloud infrastructure
+auth_url = 'https://private-cloud2.informatik.hs-fulda.de:5000'
+# your username in OpenStack
+auth_username = 'CloudComp14'
+# your project in OpenStack
+project_name = 'CloudCompGrp14'
+
+# default region
+region_name = 'RegionOne'
+# domain to use, "default" for local accounts, "hsfulda" for LDAP of DVZ, e.g., using fdaiXXXX as auth_username
+domain_name = "default"
+
+ubuntu_image_name = "Ubuntu 18.04 - Bionic Beaver - 64-bit - Cloud Based Image"
+#ubuntu_image_name = 'Ubuntu 16.04 - Xenial Xerus - 64-bit - Cloud Based Image'
+
+flavor_name = 'm1.small'
+
+network_name = "CloudCompGrp14-net"
+
+keypair_name = 'elnaz-pub'
+pub_key_file = '~/.ssh/id_rsa.pub'
+
+def main():
+    ###########################################################################
+    #
+    # get credentials
+    #
+    ###########################################################################
+
+    # if "OS_PASSWORD" in os.environ:
+    #     auth_password = os.environ["OS_PASSWORD"]
+    # else:
+    #     auth_password = getpass.getpass("Enter your OpenStack password:")
+    auth_password = "elnino"
+
+    ###########################################################################
+    #
+    # create connection
+    #
+    ###########################################################################
+
+    provider = get_driver(Provider.OPENSTACK)
+    conn = provider(auth_username,
+                    auth_password,
+                    ex_force_auth_url=auth_url,
+                    ex_force_auth_version='3.x_password',
+                    ex_tenant_name=project_name,
+                    ex_force_service_region=region_name,
+                    ex_domain_name=domain_name)
+
+    ###########################################################################
+    #
+    # get image, flavor, network for instance creation
+    #
+    ###########################################################################
+    images = conn.list_images()
+    image = ''
+    for img in images:
+        if img.name == ubuntu_image_name:
+            image = img
+
+    flavors = conn.list_sizes()
+    flavor = ''
+    for flav in flavors:
+        if flav.name == flavor_name:
+            flavor = conn.ex_get_size(flav.id)
+
+    networks = conn.ex_list_networks()
+    network = ''
+    for net in networks:
+        if net.name == network_name:
+            network = net
+
+    ###########################################################################
+    #
+    # create keypair dependency
+    #
+    ###########################################################################
+
+    print('Checking for existing SSH key pair...')
+    keypair_exists = False
+    for keypair in conn.list_key_pairs():
+        if keypair.name == keypair_name:
+            keypair_exists = True
+
+    if keypair_exists:
+        print('Keypair ' + keypair_name + ' already exists. Skipping import.')
+    else:
+        print('adding keypair...')
+        conn.import_key_pair_from_file(keypair_name, pub_key_file)
+
+    for keypair in conn.list_key_pairs():
+        print(keypair)
+
+    ###########################################################################
+    #
+    # create security group dependency
+    #
+    ###########################################################################
+
+    print('Checking for existing security group...')
+    security_group_name = 'all-in-one'
+    security_group_exists = False
+    all_in_one_security_group = ''
+    for security_group in conn.ex_list_security_groups():
+        if security_group.name == security_group_name:
+            all_in_one_security_group = security_group
+            security_group_exists = True
+
+    if security_group_exists:
+        print('Security Group ' + all_in_one_security_group.name + ' already exists. Skipping creation.')
+    else:
+        all_in_one_security_group = conn.ex_create_security_group(security_group_name,
+                                                                  'network access for all-in-one application.')
+        conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 80, 80)
+        conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 8080, 8080)
+        conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 22, 22)
+
+    for security_group in conn.ex_list_security_groups():
+        print(security_group)
+
+    ###########################################################################
+    #
+    # create all-in-one instance
+    #
+    ###########################################################################
+
+    #userdata = '''#!/usr/bin/env bash
+    #curl -L -s https://git.openstack.org/cgit/openstack/faafo/plain/contrib/install.sh | bash -s -- \
+    #    -i faafo -i messaging -r api -r worker -r demo
+    #'''
+        
+    userdata = '''#!/usr/bin/env bash
+    sudo apt update && \
+    sudo apt -y install default-jdk && \
+    sudo useradd -r -m -U -d /opt/tomcat -s /bin/false tomcat && \
+    wget http://www-eu.apache.org/dist/tomcat/tomcat-9/v9.0.20/bin/apache-tomcat-9.0.20.tar.gz -P /tmp && \
+    sudo tar xf /tmp/apache-tomcat-9*.tar.gz -C /opt/tomcat && \
+    sudo ln -s /opt/tomcat/apache-tomcat-9.0.20 /opt/tomcat/latest && \
+    sudo chown -RH tomcat: /opt/tomcat/latest && \
+    sudo sh -c 'chmod +x /opt/tomcat/latest/bin/*.sh' && \
+    sudo echo '[Unit]
+            Description=Tomcat 9 servlet container
+            After=network.target
+
+            [Service]
+            Type=forking
+
+            User=tomcat
+            Group=tomcat
+
+            Environment="JAVA_HOME=/usr/lib/jvm/default-java"
+            Environment="JAVA_OPTS=-Djava.security.egd=file:///dev/urandom -Djava.awt.headless=true"
+
+            Environment="CATALINA_BASE=/opt/tomcat/latest"
+            Environment="CATALINA_HOME=/opt/tomcat/latest"
+            Environment="CATALINA_PID=/opt/tomcat/latest/temp/tomcat.pid"
+            Environment="CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC"
+
+            ExecStart=/opt/tomcat/latest/bin/startup.sh
+            ExecStop=/opt/tomcat/latest/bin/shutdown.sh
+
+            [Install]
+            WantedBy=multi-user.target' > /etc/systemd/system/tomcat.service && \
+    sudo systemctl daemon-reload && \
+    sudo systemctl start tomcat && \
+    cd /tmp && \
+    git clone https://github.com/Elnaz-Mazaheri01/cloud_computing && \
+    sudo cp /tmp/cloud_computing/cloud.war /opt/tomcat/latest/webapps/
+    '''
+
+    print('Checking for existing instance...')
+    instance_name = 'all-in-one'
+    instance_exists = False
+    testing_instance = ''
+    for instance in conn.list_nodes():
+        if instance.name == instance_name:
+            testing_instance = instance
+            instance_exists = True
+
+    if instance_exists:
+        print('Instance ' + testing_instance.name + ' already exists. Skipping creation.')
+    else:
+        print('Starting new all-in-one instance and wait until it is running...')
+        testing_instance = conn.create_node(name=instance_name,
+                                            image=image,
+                                            size=flavor,
+                                            networks=[network],
+                                            ex_keyname=keypair_name,
+                                            ex_userdata=userdata,
+                                            ex_security_groups=[all_in_one_security_group])
+        conn.wait_until_running(nodes=[testing_instance], timeout=120, ssh_interface='private_ips')
+
+    ###########################################################################
+    #
+    # assign all-in-one instance floating ip
+    #
+    ###########################################################################
+
+    private_ip = None
+    if len(testing_instance.private_ips):
+        private_ip = testing_instance.private_ips[0]
+        print('Private IP found: {}'.format(private_ip))
+
+    public_ip = None
+    if len(testing_instance.public_ips):
+        public_ip = testing_instance.public_ips[0]
+        print('Public IP found: {}'.format(public_ip))
+
+    print('Checking for unused Floating IP...')
+    unused_floating_ip = None
+    for floating_ip in conn.ex_list_floating_ips():
+        if not floating_ip.node_id:
+            unused_floating_ip = floating_ip
+            break
+
+    if not unused_floating_ip and len(conn.ex_list_floating_ip_pools()):
+        pool = conn.ex_list_floating_ip_pools()[0]
+        print('Allocating new Floating IP from pool: {}'.format(pool))
+        unused_floating_ip = pool.create_floating_ip()
+
+    if public_ip:
+        print('Instance ' + testing_instance.name + ' already has a public ip. Skipping attachment.')
+    elif unused_floating_ip:
+        conn.ex_attach_floating_ip_to_node(testing_instance, unused_floating_ip)
+
+    actual_ip_address = None
+    if public_ip:
+        actual_ip_address = public_ip
+    elif unused_floating_ip:
+        actual_ip_address = unused_floating_ip.ip_address
+    elif private_ip:
+        actual_ip_address = private_ip
+
+    print('The creating album app will be deployed to http://{}'.format(actual_ip_address))
+
+
+if __name__ == '__main__':
+    main()

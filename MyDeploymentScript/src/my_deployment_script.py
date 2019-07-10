@@ -141,6 +141,8 @@ def main():
     userdata = '''#!/usr/bin/env bash
     sudo apt update && \
     sudo apt -y install default-jdk && \
+    sudo apt -y install python && \
+    sudo DEBIAN_FRONTEND=noninteractive apt -y install python-libcloud && \
     sudo useradd -r -m -U -d /opt/tomcat -s /bin/false tomcat && \
     wget http://www-eu.apache.org/dist/tomcat/tomcat-9/v9.0.20/bin/apache-tomcat-9.0.20.tar.gz -P /tmp && \
     sudo tar xf /tmp/apache-tomcat-9*.tar.gz -C /opt/tomcat && \
@@ -172,12 +174,14 @@ def main():
             WantedBy=multi-user.target' > /etc/systemd/system/tomcat.service && \
     sudo systemctl daemon-reload && \
     sudo systemctl start tomcat && \
-    git clone https://github.com/Elnaz-Mazaheri01/cloud_computing /tmp/cloud && \
-    sudo cp /tmp/cloud/cloud.war /opt/tomcat/latest/webapps/
+    cd /tmp && \
+    git clone https://github.com/Elnaz-Mazaheri01/cloud_computing && \
+    sudo cp /tmp/cloud_computing/cloud.war /opt/tomcat/latest/webapps/ && \
+    sudo mkdir -p /tmp/just-testing/
     '''
 
     print('Checking for existing instance...')
-    instance_name = 'all-in-one'
+    instance_name = 'my instance'
     instance_exists = False
     testing_instance = ''
     for instance in conn.list_nodes():

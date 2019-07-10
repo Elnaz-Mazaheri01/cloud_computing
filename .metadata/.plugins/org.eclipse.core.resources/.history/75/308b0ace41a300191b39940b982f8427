@@ -16,9 +16,8 @@ public class Scale {
 	}
 	
 	public void scaleOut() {
-		String command = "python /tmp/cloud_computing/MyDeploymentScript/src/scaleOut.py";
 //		String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\my_deployment_script.py";
-//		String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\scaleOut.py";
+		String command = "cmd /c python D:\\eclipse-workspace\\MyDeploymentScript\\src\\scaleOut.py";
 		try {
 			Process p = Runtime.getRuntime().exec(command);
 			BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));

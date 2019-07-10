@@ -181,7 +181,7 @@ def main():
     '''
 
     print('Checking for existing instance...')
-    instance_name = 'all-in-one'
+    instance_name = 'my instance'
     instance_exists = False
     testing_instance = ''
     for instance in conn.list_nodes():

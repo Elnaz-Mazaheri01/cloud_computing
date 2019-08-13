@@ -153,40 +153,17 @@ def main():
         for security_grp in connection.ex_list_security_groups():
             if security_grp.name == security_group_name:
                 print('Security Group ' + security_group_name + ' already exists. Skipping creation.')
-                return worker_security_group
+                
         return False
 
     if not get_security_group(conn, "api"):
         api_security_group = conn.ex_create_security_group('api', 'for API services only')
         conn.ex_create_security_group_rule(api_security_group, 'TCP', 80, 80)
+        conn.ex_create_security_group_rule(api_security_group, 'TCP', 8080, 8080)
         conn.ex_create_security_group_rule(api_security_group, 'TCP', 22, 22)
     else:
         api_security_group = get_security_group(conn, "api")
 
-    if not get_security_group(conn, "worker"):
-        worker_security_group = conn.ex_create_security_group('worker', 'for services that run on a worker node')
-        conn.ex_create_security_group_rule(worker_security_group, 'TCP', 22, 22)
-    else:
-        worker_security_group = get_security_group(conn, "worker")
-
-    if not get_security_group(conn, "control"):
-        controller_security_group = conn.ex_create_security_group('control', 'for services that run on a control node')
-        conn.ex_create_security_group_rule(controller_security_group, 'TCP', 22, 22)
-        conn.ex_create_security_group_rule(controller_security_group, 'TCP', 80, 80)
-        conn.ex_create_security_group_rule(controller_security_group, 'TCP', 5672, 5672,
-                                           source_security_group=worker_security_group)
-
-    if not get_security_group(conn, "services"):
-        services_security_group = conn.ex_create_security_group('services', 'for DB and AMQP services only')
-        conn.ex_create_security_group_rule(services_security_group, 'TCP', 22, 22)
-        conn.ex_create_security_group_rule(services_security_group, 'TCP', 3306, 3306,
-                                           source_security_group=api_security_group)
-        conn.ex_create_security_group_rule(services_security_group, 'TCP', 5672, 5672,
-                                           source_security_group=worker_security_group)
-        conn.ex_create_security_group_rule(services_security_group, 'TCP', 5672, 5672,
-                                           source_security_group=api_security_group)
-    else:
-        services_security_group = get_security_group(conn, "services")
 
     for security_group in conn.ex_list_security_groups():
         print(security_group)
